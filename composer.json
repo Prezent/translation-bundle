@@ -25,6 +25,9 @@
         "symfony/translation": "~2.3",
         "symfony/yaml": "~2.3"
     },
+    "suggest": {
+        "phpoffice/phpexcel": "Import/Export translations to Excel files"
+    },
     "autoload": {
         "psr-0": { "Prezent\\TranslationBundle": "" }
     },

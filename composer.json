@@ -1,0 +1,37 @@
+{
+    "name": "prezent/translation-bundle",
+    "type": "library",
+    "description": "Adds functionality to the Symfony2 Translator",
+    "keywords": [
+        "translator",
+        "export",
+        "symfony2",
+        "bundle"
+    ],
+    "homepage": "http://www.prezent.nl",
+    "authors": [{
+        "name": "Prezent Internet B.V.",
+        "email": "github@prezent.nl"
+    }],
+    "license": "MIT",
+    "support": {
+        "wiki": "https://github.com/prezent/translation-bundle/tree/master/Resources/doc",
+        "issues": "https://github.com/prezent/translation-bundle/issues",
+        "source": "https://github.com/prezent/translation-bundle"
+    },
+    "require": {
+        "symfony/console": "~2.3",
+        "symfony/framework-bundle": "~2.3",
+        "symfony/translation": "~2.3",
+        "symfony/yaml": "~2.3"
+    },
+    "autoload": {
+        "psr-0": { "Prezent\\TranslationBundle": "" }
+    },
+    "target-dir": "Prezent/TranslationBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.0.x-dev"
+        }
+    }
+}

@@ -18,7 +18,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class TranslationImportCommand extends ContainerAwareCommand
 {
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     protected function configure()
     {
@@ -27,14 +27,19 @@ class TranslationImportCommand extends ContainerAwareCommand
              ->addArgument('locale', InputArgument::REQUIRED, 'The locale to import')
              ->addArgument('dir', InputArgument::REQUIRED, 'Directory to read from')
              ->addOption('inline', 'i', InputOption::VALUE_OPTIONAL, 'The level where you switch to inline YAML', 2)
-             ->addOption('indent', 'd', InputOption::VALUE_OPTIONAL, 'The amount of spaces to use for indentation of nested nodes', 4)
-             ->setDescription('Import translations from CSV')
+             ->addOption(
+                 'indent',
+                 'd',
+                 InputOption::VALUE_OPTIONAL,
+                 'The amount of spaces to use for indentation of nested nodes',
+                 4
+             )->setDescription('Import translations from CSV')
              ->setHelp('Import translations from CSV')
         ;
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

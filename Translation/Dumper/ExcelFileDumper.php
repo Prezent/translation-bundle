@@ -14,7 +14,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class ExcelFileDumper implements DumperInterface
 {
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     public function dump(MessageCatalogue $messages, $options = array())
     {
@@ -23,11 +23,14 @@ class ExcelFileDumper implements DumperInterface
         }
 
         $path = $options['path'];
+        $bundleName = isset($options['bundleName']) ? $options['bundleName'] : '';
         $generatedFiles = array();
 
         // save a file for each domain
         foreach ($messages->getDomains() as $domain) {
-            $fileName = sprintf('%s.%s.xlsx', $domain, $messages->getLocale());
+            $fileName = !empty($bundleName)
+                ? sprintf('%s.%s.%s.xlsx', $bundleName, $domain, $messages->getLocale())
+                : sprintf('%s.%s.xlsx', $domain, $messages->getLocale());
 
             // create the exporter file
             $exporter = new ExcelExporter($path);

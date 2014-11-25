@@ -2,13 +2,14 @@
 
 namespace Prezent\TranslationBundle\Command;
 
+use Prezent\TranslationBundle\Translation\Dumper\CsvFileDumper;
 use Prezent\TranslationBundle\Translation\Dumper\ExcelFileDumper;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Translation\Dumper\CsvFileDumper;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\Translation\Dumper\DumperInterface;
 use Symfony\Component\Translation\MessageCatalogue;
 
@@ -20,35 +21,82 @@ use Symfony\Component\Translation\MessageCatalogue;
 class TranslationExportCommand extends ContainerAwareCommand
 {
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     protected function configure()
     {
         $this->setName('translation:export')
-             ->addArgument('bundle', InputArgument::REQUIRED, 'The bundle to export')
              ->addArgument('locale', InputArgument::REQUIRED, 'The locale to export')
              ->addArgument('dir', InputArgument::REQUIRED, 'Directory to export to')
-             ->addOption('excel', 'x', InputOption::VALUE_NONE, 'Export as Excel file')
+             ->addOption(
+                 'bundle',
+                 'b',
+                 InputOption::VALUE_REQUIRED,
+                 'The bundle to export. If empty, all bundles are exported'
+             )->addOption('excel', 'x', InputOption::VALUE_NONE, 'Export as Excel file')
              ->setDescription('Export translations to CSV or Excel')
              ->setHelp('Export translations to CSV or Excel')
         ;
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var \Symfony\Component\HttpKernel\Bundle\BundleInterface $bundle */
-        $bundle = $this->getApplication()->getKernel()->getBundle($input->getArgument('bundle'));
-        $catalogue = new MessageCatalogue($input->getArgument('locale'));
+        $allFiles = array();
+        $bundles = array();
 
+        // select the bundles
+        if ($bundleName = $input->getOption('bundle')) {
+            $bundles = array($this->getApplication()->getKernel()->getBundle($bundleName));
+        } else {
+            $bundles = $this->getApplication()->getKernel()->getBundles();
+        }
+
+        /** @var \Symfony\Component\HttpKernel\Bundle\BundleInterface $bundle */
+        foreach ($bundles as $bundle) {
+            $generatedFiles = $this->exportTranslations(
+                $bundle,
+                $input->getArgument('locale'),
+                realpath($input->getArgument('dir')),
+                $input->getOption('excel')
+            );
+
+            $allFiles = array_merge($allFiles, $generatedFiles);
+        }
+
+        // output the result, if the dumper returned it
+        foreach ($allFiles as $file) {
+            $output->writeln(sprintf('Generated file \'%s\'', $file));
+        }
+    }
+
+    /**
+     * Export the translations from a given path
+     *
+     * @param BundleInterface $bundle
+     * @param string          $locale
+     * @param string          $outputDir
+     * @param bool            $excel
+     * @return array
+     */
+    private function exportTranslations(BundleInterface $bundle, $locale, $outputDir, $excel = false)
+    {
+        // if the bundle does not have a translation dir, continue to the next one
+        $translationPath = sprintf('%s%s', $bundle->getPath(), '/Resources/translations');
+        if (!is_dir($translationPath)) {
+            return array();
+        }
+
+        // create a catalogue, and load the messages
+        $catalogue = new MessageCatalogue($locale);
         /** @var \Symfony\Bundle\FrameworkBundle\Translation\TranslationLoader $loader */
         $loader = $this->getContainer()->get('translation.loader');
-        $loader->loadMessages($bundle->getPath() . '/Resources/translations', $catalogue);
+        $loader->loadMessages($translationPath, $catalogue);
 
         // export in desired format
-        if ($input->getOption('excel')) {
+        if ($excel) {
             // check if the PHPExcel library is installed
             if (!class_exists('PHPExcel')) {
                 throw new \RuntimeException(
@@ -61,13 +109,6 @@ class TranslationExportCommand extends ContainerAwareCommand
         }
 
         /** @var DumperInterface $dumper */
-        $generatedFiles = $dumper->dump($catalogue, array('path' => realpath($input->getArgument('dir'))));
-
-        // output the result, if the dumper returned it
-        if ($generatedFiles) {
-            foreach ($generatedFiles as $file) {
-                $output->writeln(sprintf('Generated file \'%s\'', $file));
-            }
-        }
+        return $dumper->dump($catalogue, array('path' => $outputDir, 'bundleName' => $bundle->getName()));
     }
 }

@@ -1,14 +1,9 @@
 {
     "name": "prezent/translation-bundle",
-    "type": "library",
+    "type": "symfony-bundle",
     "description": "Adds functionality to the Symfony Translator",
-    "keywords": [
-        "translator",
-        "export",
-        "symfony",
-        "bundle"
-    ],
-    "homepage": "http://www.prezent.nl",
+    "keywords": ["translator", "export", "symfony", "bundle"],
+    "homepage": "https://www.prezent.nl",
     "authors": [{
         "name": "Prezent Internet B.V.",
         "email": "github@prezent.nl"
@@ -20,6 +15,7 @@
         "source": "https://github.com/prezent/translation-bundle"
     },
     "require": {
+        "php": "^5.5|^7.0",
         "symfony/console": "^2.3|^3.0",
         "symfony/framework-bundle": "^2.3|^3.0",
         "symfony/translation": "^2.3|^3.0",
@@ -30,12 +26,11 @@
         "phpoffice/phpexcel": "Import translations from Excel files"
     },
     "autoload": {
-        "psr-0": { "Prezent\\TranslationBundle": "" }
+        "psr-4": { "Prezent\\TranslationBundle\\": "" }
     },
-    "target-dir": "Prezent/TranslationBundle",
     "extra": {
         "branch-alias": {
-            "dev-master": "0.1-dev"
+            "dev-master": "1.0.x-dev"
         }
     }
 }

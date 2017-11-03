@@ -1,11 +1,11 @@
 {
     "name": "prezent/translation-bundle",
     "type": "library",
-    "description": "Adds functionality to the Symfony2 Translator",
+    "description": "Adds functionality to the Symfony Translator",
     "keywords": [
         "translator",
         "export",
-        "symfony2",
+        "symfony",
         "bundle"
     ],
     "homepage": "http://www.prezent.nl",
@@ -20,10 +20,10 @@
         "source": "https://github.com/prezent/translation-bundle"
     },
     "require": {
-        "symfony/console": "~2.3",
-        "symfony/framework-bundle": "~2.3",
-        "symfony/translation": "~2.3",
-        "symfony/yaml": "~2.3"
+        "symfony/console": "^2.3|^3.0",
+        "symfony/framework-bundle": "^2.3|^3.0",
+        "symfony/translation": "^2.3|^3.0",
+        "symfony/yaml": "^2.3|^3.0"
     },
     "suggest": {
         "phpoffice/phpexcel": "Import/Export translations to Excel files"

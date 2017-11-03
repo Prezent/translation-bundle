@@ -98,9 +98,9 @@ class TranslationExportCommand extends ContainerAwareCommand
         // export in desired format
         if ($excel) {
             // check if the PHPExcel library is installed
-            if (!class_exists('PHPExcel')) {
+            if (!class_exists('Prezent\ExcelExporter\Exporter')) {
                 throw new \RuntimeException(
-                    'PHPExcel library is not installed. Please do so if you want to export translations as Excel file.'
+                    'prezent/excel-exporter library is not installed. Please do so if you want to export translations as Excel file.'
                 );
             };
             $dumper = new ExcelFileDumper();

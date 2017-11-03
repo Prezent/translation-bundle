@@ -2,7 +2,7 @@
 
 namespace Prezent\TranslationBundle\Translation\Dumper;
 
-use Prezent\TranslationBundle\Excel\Exporter as ExcelExporter;
+use Prezent\ExcelExporter\Exporter as ExcelExporter;
 use Symfony\Component\Translation\Dumper\DumperInterface;
 use Symfony\Component\Translation\MessageCatalogue;
 
@@ -14,7 +14,7 @@ use Symfony\Component\Translation\MessageCatalogue;
 class ExcelFileDumper implements DumperInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function dump(MessageCatalogue $messages, $options = array())
     {
@@ -41,12 +41,12 @@ class ExcelFileDumper implements DumperInterface
 
             // format the data and write to file
             $data = $this->format($messages, $domain);
-
             foreach ($data as $row) {
                 $exporter->writeRow($row);
             }
 
-            $generatedFiles[] = $exporter->generateFile($fileName);
+            list ($generatedPath, $generatedFileName) = $exporter->generateFile($fileName);
+            $generatedFiles[] = $generatedPath;
         }
 
         return $generatedFiles;

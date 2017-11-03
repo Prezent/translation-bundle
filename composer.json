@@ -26,7 +26,8 @@
         "symfony/yaml": "^2.3|^3.0"
     },
     "suggest": {
-        "phpoffice/phpexcel": "Import/Export translations to Excel files"
+        "prezent/excel-exporter": "Export translations to Excel files",
+        "phpoffice/phpexcel": "Import translations from Excel files"
     },
     "autoload": {
         "psr-0": { "Prezent\\TranslationBundle": "" }

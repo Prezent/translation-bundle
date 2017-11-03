@@ -2,8 +2,7 @@
 
 namespace Prezent\TranslationBundle\Translation\Dumper;
 
-use Prezent\ExcelExporter\Exporter as ExcelExporter;
-use Symfony\Component\Translation\Dumper\DumperInterface;
+use Prezent\TranslationBundle\Excel\TranslationExporter;
 use Symfony\Component\Translation\MessageCatalogue;
 
 /**
@@ -11,45 +10,80 @@ use Symfony\Component\Translation\MessageCatalogue;
  *
  * @author  Robert-Jan Bijl <robert-jan@prezent.nl>
  */
-class ExcelFileDumper implements DumperInterface
+class ExcelFileDumper
 {
     /**
-     * {@inheritdoc}
+     * @param MessageCatalogue[] $catalogues
+     * @param array $options
+     * @return array
      */
-    public function dump(MessageCatalogue $messages, $options = array())
+    public function dump(array $catalogues, $options = [])
     {
         if (!array_key_exists('path', $options)) {
             throw new \InvalidArgumentException('The file dumper needs a path option.');
         }
 
         $path = $options['path'];
-        $bundleName = isset($options['bundleName']) ? $options['bundleName'] : '';
-        $generatedFiles = array();
+        list($exporter, $sheetDefinitions) = $this->createExporter($catalogues, $path);
 
-        // save a file for each domain
-        foreach ($messages->getDomains() as $domain) {
-            $fileName = !empty($bundleName)
-                ? sprintf('%s.%s.%s.xlsx', $bundleName, $domain, $messages->getLocale())
-                : sprintf('%s.%s.xlsx', $domain, $messages->getLocale());
+        $j = 0;
+        foreach ($catalogues as $catalogue) {
+            /** @var MessageCatalogue $messages */
+            $messages = $catalogue['catalogue'];
+            foreach ($messages->getDomains() as $domain) {
+                // start the line with the full name of the sheet
+                $row = [$sheetDefinitions[$j]];
+                $exporter->writeRow($row, $j);
 
-            // create the exporter file
-            $exporter = new ExcelExporter($path);
+                // create the header row
+                $row = ['key', $messages->getLocale()];
+                $exporter->writeRow($row, $j);
 
-            // create the header row
-            $row = array('key', $messages->getLocale());
-            $exporter->writeRow($row);
+                // format the data and write to file
+                $data = $this->format($messages, $domain);
+                foreach ($data as $row) {
+                    $exporter->writeRow($row, $j);
+                }
 
-            // format the data and write to file
-            $data = $this->format($messages, $domain);
-            foreach ($data as $row) {
-                $exporter->writeRow($row);
+                $j++;
             }
-
-            list ($generatedPath, $generatedFileName) = $exporter->generateFile($fileName);
-            $generatedFiles[] = $generatedPath;
         }
 
-        return $generatedFiles;
+        $fileName = sprintf('%s-translations.xlsx', date('Y-m-d'));
+        list ($generatedPath, $generatedFileName) = $exporter->generateFile($fileName);
+
+        return $generatedPath;
+    }
+
+    /**
+     * Create the excel exporter, populate with a sheet per domain
+     *
+     * @param MessageCatalogue[] $catalogues
+     * @param string $path
+     * @return array
+     */
+    private function createExporter(array $catalogues, $path)
+    {
+        $sheetDefinitions = [];
+        $i = 0;
+
+        // create a file with a worksheet for each domain
+        foreach ($catalogues as $catalogue) {
+            $bundleName = $catalogue['bundle'];
+            /** @var MessageCatalogue $messages */
+            $messages = $catalogue['catalogue'];
+            foreach ($messages->getDomains() as $domain) {
+                $sheetDefinitions[$i] = !empty($bundleName)
+                    ? sprintf('%s.%s.%s', $bundleName, $domain, $messages->getLocale())
+                    : sprintf('%s.%s', $domain, $messages->getLocale())
+                ;
+                $i++;
+            }
+        }
+
+        $exporter = new TranslationExporter($path, $sheetDefinitions);
+
+        return [$exporter, $sheetDefinitions];
     }
 
     /**

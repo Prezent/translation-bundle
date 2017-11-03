@@ -16,14 +16,11 @@
     },
     "require": {
         "php": "^5.5|^7.0",
+        "prezent/excel-exporter": "^1.0",
         "symfony/console": "^2.3|^3.0",
         "symfony/framework-bundle": "^2.3|^3.0",
         "symfony/translation": "^2.3|^3.0",
         "symfony/yaml": "^2.3|^3.0"
-    },
-    "suggest": {
-        "prezent/excel-exporter": "Export translations to Excel files",
-        "phpoffice/phpexcel": "Import translations from Excel files"
     },
     "autoload": {
         "psr-4": { "Prezent\\TranslationBundle\\": "" }

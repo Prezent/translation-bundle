@@ -2,7 +2,6 @@
 
 namespace Prezent\TranslationBundle\Command;
 
-use Prezent\TranslationBundle\Translation\Dumper\CsvFileDumper;
 use Prezent\TranslationBundle\Translation\Dumper\ExcelFileDumper;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -10,7 +9,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
-use Symfony\Component\Translation\Dumper\DumperInterface;
 use Symfony\Component\Translation\MessageCatalogue;
 
 /**
@@ -33,9 +31,9 @@ class TranslationExportCommand extends ContainerAwareCommand
                  'b',
                  InputOption::VALUE_REQUIRED,
                  'The bundle to export. If empty, all bundles are exported'
-             )->addOption('excel', 'x', InputOption::VALUE_NONE, 'Export as Excel file')
-             ->setDescription('Export translations to CSV or Excel')
-             ->setHelp('Export translations to CSV or Excel')
+             )
+             ->setDescription('Export translations to Excel')
+             ->setHelp('Export translations to Excel')
         ;
     }
 
@@ -44,9 +42,6 @@ class TranslationExportCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $allFiles = array();
-        $bundles = array();
-
         // select the bundles
         if ($bundleName = $input->getOption('bundle')) {
             $bundles = array($this->getApplication()->getKernel()->getBundle($bundleName));
@@ -55,21 +50,22 @@ class TranslationExportCommand extends ContainerAwareCommand
         }
 
         /** @var \Symfony\Component\HttpKernel\Bundle\BundleInterface $bundle */
+        $catalogues = [];
+
         foreach ($bundles as $bundle) {
-            $generatedFiles = $this->exportTranslations(
+            if ($catalogue = $this->exportTranslations(
                 $bundle,
-                $input->getArgument('locale'),
-                realpath($input->getArgument('dir')),
-                $input->getOption('excel')
-            );
-
-            $allFiles = array_merge($allFiles, $generatedFiles);
+                $input->getArgument('locale')
+            )) {
+                $catalogues[] = $catalogue;
+            };
         }
 
-        // output the result, if the dumper returned it
-        foreach ($allFiles as $file) {
-            $output->writeln(sprintf('Generated file \'%s\'', $file));
-        }
+        $dumper = new ExcelFileDumper();
+        $file = $dumper->dump($catalogues, ['path' => realpath($input->getArgument('dir'))]);
+
+        $output->writeln(sprintf('Generated file \'%s\'', $file));
+        exit(0);
     }
 
     /**
@@ -77,11 +73,9 @@ class TranslationExportCommand extends ContainerAwareCommand
      *
      * @param BundleInterface $bundle
      * @param string          $locale
-     * @param string          $outputDir
-     * @param bool            $excel
      * @return array
      */
-    private function exportTranslations(BundleInterface $bundle, $locale, $outputDir, $excel = false)
+    private function exportTranslations(BundleInterface $bundle, $locale)
     {
         // if the bundle does not have a translation dir, continue to the next one
         $translationPath = sprintf('%s%s', $bundle->getPath(), '/Resources/translations');
@@ -95,20 +89,6 @@ class TranslationExportCommand extends ContainerAwareCommand
         $loader = $this->getContainer()->get('translation.loader');
         $loader->loadMessages($translationPath, $catalogue);
 
-        // export in desired format
-        if ($excel) {
-            // check if the PHPExcel library is installed
-            if (!class_exists('Prezent\ExcelExporter\Exporter')) {
-                throw new \RuntimeException(
-                    'prezent/excel-exporter library is not installed. Please do so if you want to export translations as Excel file.'
-                );
-            };
-            $dumper = new ExcelFileDumper();
-        } else {
-            $dumper = new CsvFileDumper();
-        }
-
-        /** @var DumperInterface $dumper */
-        return $dumper->dump($catalogue, array('path' => $outputDir, 'bundleName' => $bundle->getName()));
+        return ['bundle' => $bundle->getName(), 'catalogue' => $catalogue];
     }
 }
